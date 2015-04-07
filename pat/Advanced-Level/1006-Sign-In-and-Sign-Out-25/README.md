@@ -27,7 +27,7 @@ SC3021234 CS301133
 ```
 ## Solution
 不需要排序
-```
+```C++
 #include <iostream>
 #include <string>
 #include <sstream>
