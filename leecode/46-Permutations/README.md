@@ -38,3 +38,26 @@ public:
     }
 };
 ```
+另一种解法
+```C++
+class Solution {
+private:
+    void dfs(vector<int> &num, int step, vector<vector<int> > &ret){
+        if(step == num.size() - 1){
+            ret.push_back(num);
+            return;
+        }
+        for(int i=step; i<num.size(); i++){
+            swap(num[i], num[step]);
+            dfs(num, step+1, ret);
+            swap(num[i], num[step]);
+        }
+    }
+public:
+    vector<vector<int> > permute(vector<int> &num) {
+        vector<vector<int> > ret;
+        dfs(num, 0, ret);
+        return ret;
+    }
+};
+```
