@@ -11,7 +11,7 @@ have the following permutations:
 ```
 
 ## Solution
-dfs的搜索题
+dfs的搜索题，但是无法处理有重复值的情况，比如`[1, 1, 2]`。
 ```C++
 class Solution {
 private:
