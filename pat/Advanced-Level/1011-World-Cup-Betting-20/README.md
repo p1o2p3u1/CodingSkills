@@ -33,7 +33,7 @@ T T W 37.98
 ```
 ## Solution
 超级水题，不必看第二遍
-```
+```C++
 # include <iostream>
 # include <cstdio>
 using namespace std;
