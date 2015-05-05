@@ -122,6 +122,31 @@ void mergeSort(int a[], int n){
 ### 快速排序
 
 ```C++
+int partition1(int array[], int low, int high){
+	int key = array[low];
+	int i=low, j=high + 1;
+	while(true){
+		while(i < high && array[++i] < key);
+		while(j > low && array[--j] > key);
+		if(i >= j) break;
+		swap(array[i], array[j]);
+	}
+	swap(array[low], array[j]);
+	return j;
+}
+
+int partition2(int array[], int low, int high){
+	
+}
+void qsort(int array[], int low, int high){
+	int k = partition(array, low, high);
+	qsort(array, low, k-1);
+	qsort(array, k+1, high);
+}
+
+void quickSort(int array[], int n){
+	qsort(array, 0, n-1);
+}
 
 ```
 
@@ -129,15 +154,122 @@ void mergeSort(int a[], int n){
 
 ```C++
 
+
 ```
 
 ## 树
+```C++
+struct TreeNode {
+	int val;
+	TreeNode *left;
+	TreeNode *right;
+	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+};
+```
+### 先序遍历非递归
+```C++
+vector<int> preorderTraversal(TreeNode *root){
+	vector<int> ret;
+	if(root == NULL) return ret;
+	stack<TreeNode*> s;
+	s.push(root);
+	while(!s.empty()){
+		TreeNode *t = s.top(); s.pop();
+		ret.push_back(t -> val);
+		if(t -> right)// 注意是先右边入栈
+			s.push(t -> right);
+		if(t -> left)
+			s.push(t -> left);
+	}
+	return ret;
+}
 
-### 先序遍历
-### 中序遍历
-### 后序遍历
+```
+### 中序遍历非递归
+```C++
+vector<int> inorderTraversal(TreeNode *root){
+	vector<int> ret;
+	if(root == NULL) return ret;
+	stack<TreeNode*> s;
+	TreeNode *t = root;
+	while(!s.empty() || t != NULL){
+		if(t != NULL){
+			s.push(t);
+			t = t -> left;
+		}else{
+			t = s.top(); s.pop();
+			ret.push_back(t -> val);
+			t = t -> right;
+		}
+	}
+	return ret;
+}
+```
+### 后序遍历非递归
+```C++
+vector<int> postorderTraversal(TreeNode *root){
+	vector<int> ret;
+	if(root == NULL) return ret;
+	stack<TreeNode*> s;
+	TreeNode *p = root, *visit;
+	while(!e.empty() || p != NULL){
+		if(p != NULL){
+			s.push(p);
+			p = p -> left;
+		}else{
+			p = s.top();
+			if(p -> right && p -> right != visit){
+				p = p -> right;
+				s.push(p);
+				p = p -> left;
+			}else{
+				visit = p;
+				ret.push_back(p -> val);
+				s.pop();
+				p = NULL;
+			}
+		}
+	}
+	return ret;
+}
+```
 ### 层序遍历
+```C++
+vector<vector<int> > levelOrder(TreeNode *root){
+	vector<vector<int> > ret;
+	if(root == NULL) return ret;
+	queue<vector<TreeNode*> > q;
+	q.push({root});
+	while(!q.empty()){
+		vector<TreeNode*> x = q.front(); q.pop();
+		vector<int> tmp; // 存放该层遍历的结果
+		vector<TreeNode*> next; // 存放下一层要遍历的节点
+		for(int i=0; i<x.size(); i++){
+			tmp.push_back(x[i] -> val);
+			if(x[i] -> left != NULL) next.push_back(x[i] -> left);
+			if(x[i] -> right != NULL) next.push_back(x[i] -> right); 
+		}
+		if(next.size() > 0) q.push(next);
+		ret.push_back(tmp);
+	}
+	return ret;
+}
+
+```
 ### Binary Search
+```C++
+int binarySearch(int array[], int n, int key){
+	assertSorted(array);
+	int low = 0, high = n-1;
+	while(low <= high){
+		int mid = low + (high - low) / 2;
+		if(array[mid] == key) 		return mid;
+		else if(array[mid] > key) 	high = mid - 1;
+		else						low = mid + 1;
+	}
+	return -1;
+}
+```
 ### Tries
 ### Red Black
 
@@ -170,5 +302,40 @@ int strlen(const char *str){
 ### 栈
 ### 队列
 ### malloc
+### LRU
+```C++
+// 使用list+map
+class LRUCache{
+private:
+    int capacity;
+    list<pair<int, int> > items;
+    unordered_map<int, list<pair<int, int> >::iterator> cache;
+public:
+	LRUCache(int capacity): capacity(capacity) {}
+	int get(int key){
+		if(cache.find(key) == cache.end())
+			return -1;
+		// 将找到的节点放到链表头
+		items.splice(items.begin(), items, cache[key]);
+		return cache[key] -> second;
+	}
+	void set(int key, int value){
+		if(cache.find(key) == cache.end()){
+			if(item.size() == capacity){
+				// 移除对应的cache和链表底
+				cache.erase(items.back().first);
+				items.pop_back();
+			}
+			// 此时确保有足够的空间
+			items.push_front(make_pair(key, value));
+			cache[key] = items.begin();
+		}else{
+			// 将找到的节点放到链表头，更新value
+			items.splice(items.begin(), items, cache[key]);
+			cache[key] -> second = value;
+		}
+	}
+};
+```
 ### 经典DP
 
