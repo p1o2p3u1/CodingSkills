@@ -271,21 +271,233 @@ int binarySearch(int array[], int n, int key){
 }
 ```
 ### Tries
-### Red Black
+### 后缀数组
+### 线段树
+### 树状数组
+### 红黑树
 
 ## 子串查找
 ### KMP
+```C++
+void get_next(const string sub, int *next) {
+    int len=sub.length();
+    int i,k;
+    next[0]=k=-1;
+    for (i=0; i<len;) {
+        if (k==-1 || sub[i]==sub[k]) {
+            k++; i++;
+            if (sub[k]!=sub[i]) next[i]=k;
+            else next[i]=next[k];    //避免重复计算优化next数组
+        }
+        else k=next[k];
+    }
+}
+
+int KMP(const string str, const string sub, const int *next) {
+    //返回子串在主串中的起始位置下标
+    int i,j;
+    int len1=str.length();
+    int len2=sub.length();
+    for (i=0, j=0; i<len1 && j<len2;)
+        if (j==-1 || str[i]==sub[j])
+            i++; j++;
+        else 
+            j=next[j];
+    if (j==len2)
+        return i-len2;
+    return -1; //如果找不到就返回-1
+}
+```
 ### Boyer-Moore
 ### Rabin-Karp
 
 ## 图
+### 并查集
 ### Kruskal
 ### Prim
 ### Dijkstra
 ### SPFA
-
+### 拓扑排序
+### 二分图
+## 几何
+### 多边形面积
 ## 其他
+### BigInteger
+
+```C++
+const int BASE_LENGTH = 2;
+const int BASE = (int) pow(10, BASE_LENGTH);
+const int MAX_LENGTH = 500;
+
+string int_to_string(int i, int width, bool zero) {
+    string res = "";
+    while (width--) {
+        if (!zero && i == 0) return res;
+        res = (char)(i%10 + '0') + res;
+        i /= 10;
+    }
+    return res;
+}
+
+struct bigint {
+    int len, s[MAX_LENGTH];
+
+    bigint() {  
+        memset(s, 0, sizeof(s));  
+        len = 1;  
+    }
+
+    bigint(unsigned long long num) {
+        len = 0;
+        while (num >= BASE) {
+            s[len] = num % BASE;
+            num /= BASE;
+            len ++;
+        }
+        s[len++] = num;
+    }
+
+    bigint(const char* num) {
+        int l = strlen(num);
+        len = l/BASE_LENGTH;
+        if (l % BASE_LENGTH) len++;
+        int index = 0;
+        for (int i = l - 1; i >= 0; i -= BASE_LENGTH) {
+            int tmp = 0;
+            int k = i - BASE_LENGTH + 1;
+            if (k < 0) k = 0;
+            for (int j = k; j <= i; j++) {
+                tmp = tmp*10 + num[j] - '0';
+            }
+            s[index++] = tmp;
+        }
+    }
+
+    void clean() {  
+        while(len > 1 && !s[len-1]) len--;  
+    }
+
+    string str() const {
+        string ret = "";
+        if (len == 1 && !s[0]) return "0";
+        for(int i = 0; i < len; i++) {
+            if (i == 0) {
+                ret += int_to_string(s[len - i - 1], BASE_LENGTH, false);
+            } else {
+                ret += int_to_string(s[len - i - 1], BASE_LENGTH, true);
+            }
+        }
+        return ret;
+    }
+
+    unsigned long long ll() const {
+        unsigned long long ret = 0;
+        for(int i = len-1; i >= 0; i--) {
+            ret *= BASE;
+            ret += s[i];
+        }
+        return ret;
+    }
+
+    bigint operator + (const bigint& b) const {
+        bigint c = b;
+        while (c.len < len) c.s[c.len++] = 0;
+        c.s[c.len++] = 0;
+        bool r = 0;
+        for (int i = 0; i < len || r; i++) {
+            c.s[i] += (i<len)*s[i] + r;
+            r = c.s[i] >= BASE;
+            if (r) c.s[i] -= BASE;
+        }
+        c.clean();
+        return c;
+    }
+
+    bigint operator - (const bigint& b) const {
+        if (operator < (b)) throw "cannot do subtract";
+        bigint c = *this;
+        bool r = 0;
+        for (int i = 0; i < b.len || r; i++) {
+            c.s[i] -= b.s[i];
+            r = c.s[i] < 0;
+            if (r) c.s[i] += BASE;
+        }
+        c.clean();
+        return c;
+    }
+
+    bigint operator * (const bigint& b) const {  
+        bigint c;
+        c.len = len + b.len;  
+        for(int i = 0; i < len; i++)  
+            for(int j = 0; j < b.len; j++)  
+                c.s[i+j] += s[i] * b.s[j];  
+        for(int i = 0; i < c.len-1; i++){  
+            c.s[i+1] += c.s[i] / BASE;  
+            c.s[i] %= BASE;  
+        }  
+        c.clean();  
+        return c;  
+    }
+
+    bigint operator / (const int b) const {
+        bigint ret;
+        int down = 0;
+        for (int i = len - 1; i >= 0; i--) {
+            ret.s[i] = (s[i] + down * BASE) / b;
+            down = s[i] + down * BASE - ret.s[i] * b;
+        }
+        ret.len = len;
+        ret.clean();
+        return ret;
+    }
+
+    bool operator < (const bigint& b) const {
+        if (len < b.len) return true;
+        else if (len > b.len) return false;
+        for (int i = 0; i < len; i++)
+            if (s[i] < b.s[i]) return true;
+            else if (s[i] > b.s[i]) return false;
+        return false;
+    }
+
+    bool operator == (const bigint& b) const {
+        return !(*this<b) && !(b<(*this));
+    }
+
+    bool operator > (const bigint& b) const {
+        return b < *this;
+    }
+};
+```
 ### atoi
+```C
+int atoi(const char *str) {
+	int num = 0;
+	int sign = 1;
+	const int n = strlen(str);
+	int i = 0;
+	while (str[i] == ' ' && i < n) i++;
+	if (str[i] == '+') {
+		i++;
+	} else if (str[i] == '-') {
+		sign = -1;
+		i++;
+	}
+	for (; i < n; i++) {
+		if (str[i] < '0' || str[i] > '9')
+			break;
+		// -2147483648 or +2147483647 ?
+		if (num > INT_MAX / 10 ||
+				(num == INT_MAX / 10 &&
+					(str[i] - '0') > INT_MAX % 10)) {
+						return sign == -1 ? INT_MIN : INT_MAX;
+					}
+		num = num * 10 + str[i] - '0';
+	}
+	return num * sign;
+}
+```
 ### strlen
 ```C++
 int strlen(const char *str){
@@ -295,6 +507,73 @@ int strlen(const char *str){
 }
 ```
 ### auto_ptr
+```C++
+// auto_ptr<T*> ptr(t);
+template<typename T>
+class auto_ptr<T>{
+private:
+	T *p;
+public:
+	// 构造函数禁止隐式类型转换
+	explicit auto_ptr(T* t = 0): p(t){};
+	// 拷贝构造函数
+	template<typename U>
+	auto_ptr(auto_ptr<U> &u): p(u.release()){}
+	// copy assignment
+	template<typename U>
+	auto_ptr<T>& operator=(auto_ptr<U> &u){
+		if(this != &u) reset(u.release()); // 右操作数自动释放，变为NULL
+		return *this;
+	}
+	//析构函数
+	~auto_ptr(){delete p;}
+	// 功能函数
+	T& operator*() {return *p;}
+	T* operator->() {return p;}
+	T* get() {return p;}
+	T* release(){
+		T* tmp = p;
+		p = NULL;
+		return tmp;
+	}
+	void reset(T* t = 0){
+		if(p != t){
+			delete p;
+			p = t;
+		}
+	}
+};
+```
+### gcd
+```C++
+int gcd(int x, int y){
+	if(x < y) return gcd(y, x);
+	if(y == 0) return x;
+	return (y, x % y);
+}
+```
+### Prime
+```C++
+bool isPrime(int n){
+    if (n == 1 || n % 2 == 0)
+        return false;  
+    int t = sqrt(n);
+    for (int i = 3; i <= t; i += 2)
+        if (n % i == 0)
+            return false;
+    return true;
+}
+// 打表法
+int is_prime[UP_LIMIT + 1];
+for (int i = 1; i <= UP_LIMIT; i++) // init to 1
+    is_prime[i] = 1;
+for (int i = 4; i <= UP_LIMIT; i += 2) // even number is not
+    is_prime[i] = 0;
+for (int k = 3; k*k <= UP_LIMIT; k++) // start from 9, end at sqrt
+    if (is_prime[k])
+        for(int i = k*k; i <= UP_LIMIT; i += 2*k) // every two is not 
+            is_prime[i] = 0;
+```
 ### vector
 ### string
 ### hashtable
