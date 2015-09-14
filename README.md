@@ -618,3 +618,199 @@ public:
 ```
 ### 经典DP
 
+
+### 进程同步（基于PV操作）
+
+#### 生产者消费者问题
+
+一组生产者和一组消费者共享大小为N的缓冲区，只要缓冲区未满就能放产品，只要缓冲区未空就能取产品，但一次只能有一个生产者放产品，或者只能有一个消费者取产品。
+
+```C++
+// P可以理解为检测，V可以理解为提醒， 这是个1 vs 1的问题。
+semaphore mutex = 1; // 对缓冲区是互斥的访问
+semaphore item = 0, buffer = n;
+
+procedure Producer() {
+	
+	while(1){
+		// 生产商品
+		P(buffer);  // 检查buffer
+		P(mutex);
+		// 将商品放入缓冲区
+		V(mutex);
+		V(item); 	// 提醒放入一个商品
+	}	
+}
+
+procedure Customer() {
+	
+	while(1){
+		P(item);	// 检查是否有商品
+		P(mutex);
+		// 取出商品
+		V(mutex);
+		V(buffer);	// 提醒消费一件商品
+
+	}
+
+}
+
+#### 读者写者问题
+
+1. 允许多个读者同时读
+2. 只允许一个写者写，写是排他性的。
+3. 写者要等所有读者都退出后才能写。
+
+```C++
+// 这是一个1 vs n的问题，需要一个计数器纪录读者的数目，满足条件3时才能写
+
+int readerNum = 0;
+semophore ReaderMutex = 1, WriterMutex = 1;
+
+procedure Writer(){
+
+	while(1){
+		P(WriteMutex)
+		write;
+		V(WriteMutex);
+	}
+
+}
+// 写是互斥的，而读者是可以并发的。如果在生产者消费者案例中，允许消费者并发消费，就变成读者写者问题。
+procedure Reader(){
+
+	while(1){
+		P(ReaderMutex);
+		if(readerNum == 0){
+			P(WriterMutex); // 只需要第一个进入的读者阻塞写者，否则就变成每次只有一个读者在读。
+		}
+		readerNum ++;  // 对readerNum的修改是互斥的。
+		V(ReaderMutex);
+		read;
+		P(ReaderMutex);
+		readerNum--;
+		if(readerNum == 0){
+			V(WriterMutex); // 最后一个读者退出时，可以发信号量给写者
+		}
+		V(ReaderMutex);
+	}
+}
+
+```
+
+新增一个需求：写者优先。
+
+即当有写者要写时，需要先阻塞其余写者的进入。因此要增加一个互斥信号量。
+```C++
+int readerNum = 0;
+semophore ReaderMutex = 1, WriterMutex = 1, AllReaderStop = 1;
+
+procedure Writer(){
+	
+	while(1){
+		P(AllReaderStop);
+		P(WriterMutex);
+		write;
+		V(WriterMutex);
+		V(AllReaderStop);
+	}
+}
+
+procedure Reader(){
+
+	while(1){
+		P(AllReaderStop); // 检查是否有读者阻塞
+		P(ReaderMutex);
+		if(readerNum == 0){
+			P(WriterMutex);
+		}
+		readerNum++;
+		V(ReaderMutex);
+		V(AllReaderStop); // 此时释放
+		read;
+		P(ReaderMutex);
+		readerNum--;
+		if(readerNum == 0){
+			V(WriterMutex);
+		}
+		V(ReaderMutex);
+	}	
+}
+```
+
+#### 哲学家进餐问题
+
+1. 5个哲学家，5根筷子
+2. 哲学家进餐时一次只能拿一根筷子，只有拿了两根筷子才能进餐。吃完后放下筷子。
+
+```C++
+// 这是一个m vs n的问题，注意这类问题的解题方法。
+// 5个哲学家是5个进程，5根筷子是5个信号量。
+// 注意下面这个方法会产生死锁
+semophore chopsticks[5] = {1, 1, 1, 1, 1};
+
+procedure Philosopher_i(){
+
+	while(1){
+		P(chopsticks[i]);
+		P(chopsticks[(i+1)%5]);
+		eat;
+		V(chopsticks[(i+1)%5]);
+		V(chopsticks[i]);
+		think;
+	}
+
+}
+// 此时，当有5个哲学家同时执行P(chopsticks[i])时，就会产生死锁。
+// 因此，需要对抓筷子添加互斥，最多同时允许4个哲学家进餐
+
+semophore chopsticks[5] = {1, 1, 1, 1, 1};
+semophore mutex = 1;
+
+procedure Philosopher_i(){
+	
+	while(1){
+		P(mutex);
+		P(chopsticks[i]);
+		P(chopsticks[(i+1)%5]);
+		V(mutex); // V(mutex)要在eat之前，否则变成每次只有一个哲学家在进餐了。
+		eat; 
+		V(chopsticks[(i+1)%5]);
+		V(chopsticks[i]);
+		think;
+	}
+}
+```
+
+#### 吸烟者问题
+三个抽烟进程，一个供应进程。抽烟需要三种材料：烟草，纸和胶水。第一个抽烟者进程只有烟草，第二个抽烟者进程只有纸，第三个抽烟者进程只有胶水。供应进程每次随机产生两种材料放倒桌子上，抽烟者进程拿到对应的材料后抽烟，并发送信号给供应者进程继续供应。
+
+抽烟者：检查材料 －> 抽烟 -> 发送信号
+供应者：供应材料 -> 等待信号
+
+```C++
+semophore offer1 = offer2 = offer3 = 0; // 每一个offer都对应两种材料，简化逻辑
+semophore finish = 0; // 抽完的信号
+
+procedure Smoker_i(){
+	
+	while(1){
+		P(offer_i);
+		smoke;
+		V(finish); // 发送信号
+	}
+}
+
+procedure Producer(){
+	
+	while(1){
+		random = ramdom() % 3;
+		if(random == 0)			V(offer1);
+		else if(random == 1)	V(offer2);
+		else 					V(offer3);
+		// 将材料放到桌子上
+		P(finish);  // 等待信号
+	}
+}
+
+```
