@@ -270,7 +270,49 @@ int binarySearch(int array[], int n, int key){
 	return -1;
 }
 ```
-### Tries
+### Trie
+前缀树
+```C++
+struct Trie{
+	char c;
+	int cnt; // 到当前Trie节点为前缀的单词的个数
+	struct Trie *next[26];
+	Trie(char c, int v = 0): c(c), cnt(v) {
+		for(int i=0; i<26; i++){
+			next[i] = nullptr;
+		}
+	}
+} ;
+
+void insert(Trie *root, string str){
+	Trie *p = root;
+	for(int i=0; i<str.length(); i++){
+		char c = str[i];
+		int v = c - 'a';
+		if(p -> next[v] == nullptr){
+			p -> next[v] = new Trie(c, 1);
+		} else {
+			p->next[v] -> cnt ++;
+		}
+		p = p -> next[v];
+	}
+}
+// 返回以str为前缀的单词的个数
+int query(Trie *root, string str){
+	Trie *p = root;
+	int ret = 0;
+	for(int i=0; i<str.length(); i++){
+		int v = str[i] - 'a';
+		if(p -> next[v] == nullptr) return 0;
+		else {
+			ret = p -> next[v] -> cnt;
+			p = p -> next[v];
+		}
+	}
+	return ret;
+}
+
+```
 ### 后缀数组
 ### 线段树
 ### 树状数组
