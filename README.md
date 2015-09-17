@@ -548,6 +548,17 @@ int strlen(const char *str){
     return (s - str);
 }
 ```
+### strcpy
+```C++
+char *strcpy(char *dst, const char*str){
+    if(str == NULL) return NULL;
+    if(dst == NULL) return NULL;
+    char *ret = dst;
+    while( (*dst++ = *src++) != '\0');
+    return ret;
+}
+
+```
 ### auto_ptr
 ```C++
 // auto_ptr<T*> ptr(t);
