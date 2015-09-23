@@ -17,9 +17,13 @@ Given n = 3, there are a total of 5 unique BST's.
 ## Solution
 
 当n==0时，空树只有一个
+
 当n==1时，根节点只有一个
-当n==2时，dp[2] = dp[0] * dp[1] + dp[1] * dp[0]
+
+当n==2时，dp[2] = dp[0] * dp[1] + dp[1] * dp
+
 当n==3时，dp[3] = dp[0] * dp[2] + dp[1] * dp[1] + dp[2] * dp[0]
+
 
 ```C++
 int uniqueBST(int n){
