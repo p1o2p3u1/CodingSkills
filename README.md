@@ -256,6 +256,20 @@ vector<vector<int> > levelOrder(TreeNode *root){
 }
 
 ```
+### 已知前序中序，求后续
+```C++
+string post_order(const string &pre, const string &mid){
+	unsigned long len = pre.length();
+	if(len <= 1) return pre;
+	char root = pre[0];
+	unsigned long index = pre.find(root);
+	string left_pre = pre.substr(1, index);
+	string right_pre = pre.substr(index + 1, len - index - 1);
+	string left_mid = mid.substr(0, index);
+	string right_mid = mid.substr(index + 1, len - index - 1);
+	return post_order(left_pre, left_mid) + post_order(right_pre, right_mid) + root;
+}
+```
 ### Binary Search
 ```C++
 int binarySearch(int array[], int n, int key){
