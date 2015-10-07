@@ -19,16 +19,23 @@ public:
         int carry = 0;
         string ret;
         while(i >=0 && j >=0){
-        	int sum = a[i] - '0' + b[j] - '0' + carry;
+        	int sum = a[i--] - '0' + b[j--] - '0' + carry;
         	ret += sum % 2 + '0';
         	carry = sum / 2;
     	}
     	while(i >= 0){
-    		
+    		int sum = a[i--] - '0' + carry;
+    		ret += sum % 2 + '0';
+    		carry = sum / 2;
     	}
     	while(j >= 0){
-
+    		int sum = b[j--] - '0' + carry;
+    		ret += sum % 2 + '0';
+    		carry = sum / 2;
     	}
+    	if(carry > 0) ret += carry + '0';
+    	reverse(ret.begin(), ret.end());
+    	return ret;
     }
 };
 ```
