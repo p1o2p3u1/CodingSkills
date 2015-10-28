@@ -618,6 +618,17 @@ int gcd(int x, int y){
 	if(y == 0) return x;
 	return (y, x % y);
 }
+
+int gcd(int a, int b)
+{
+	while (a = a % b)
+	{
+		a ^= b;
+		b ^= a;
+		a ^= b;
+	}
+	return b;
+}
 ```
 ### Prime
 ```C++
